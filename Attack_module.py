@@ -14,6 +14,59 @@ def print_battle_map(battle_map):
         print(row)
 
 
+def test_aoe(aoe):
+    """
+    Display AOE (%) in console
+    :param aoe: skill's AOE
+    :type aoe: list of tuples
+    """
+
+    test_map = create_battle_map(5, 5)
+    test_map[2][2] = "(X)"
+    for x, y in aoe:
+        test_map[2 + x][2 + y] = "%"
+
+    print_battle_map(test_map)
+
+
+def test_all_aoe():
+    """
+    Test all AOE available, show on map (warning: no skill name, so check the order of aoe_list below)
+    """
+
+    aoe_list = [skill_aoe_double_h,
+                skill_aoe_double_v,
+                skill_aoe_corner,
+                skill_aoe_cross_d,
+                skill_aoe_cross_h]
+
+    for each in aoe_list:
+        print(each)
+        test_aoe(each)
+
+
+def test_populate_map(battle_map):
+    """
+    Populate battle_map with dummy value
+    :param battle_map: battle_map
+    :type battle_map: list of list
+    """
+
+    battle_map[5][4] = "!"
+    battle_map[3][1] = "!"
+    battle_map[4][2] = "*"
+    battle_map[4][1] = "@"
+    battle_map[3][3] = "*"
+    battle_map[2][2] = "*"
+    battle_map[3][5] = "!"
+    battle_map[7][6] = "!"
+    battle_map[5][3] = "!"
+    battle_map[6][4] = "*"
+    battle_map[6][3] = "@"
+    battle_map[5][5] = "*"
+    battle_map[8][5] = "*"
+    battle_map[6][7] = "!"
+
 
 """ *************************************************
                 USABLE FUNCTION 
@@ -41,9 +94,6 @@ def create_battle_map(row, col):
         battle_map.append(new_row)
 
     return battle_map
-
-
-
 
 
 def attack_mode_examine_map(battle_map, pivot_x, pivot_y, usable_skill):
@@ -130,10 +180,10 @@ def examine_skill_effect(battle_map, pivot_x, pivot_y, skill_type):
     def tile_examine(tile):
         """
         Function to Examine each tile
-        :param tile:
-        :type tile:
-        :return:
-        :rtype:
+        :param tile: which tile to check
+        :type tile: list element
+        :return: type of tile
+        :rtype: string
         """
 
         if tile == tile_mode_shield:
@@ -167,50 +217,6 @@ def examine_skill_effect(battle_map, pivot_x, pivot_y, skill_type):
     return examine_result
 
 
-
-
-
-
-
-def test_aoe(aoe):
-
-    test_map = create_battle_map(5,5)
-    test_map[2][2] = "(X)"
-    for x,y in aoe:
-        test_map[2+x][2+y] = "%"
-
-    print_battle_map(test_map)
-
-
-def test_all_aoe():
-
-    aoe_list = [skill_aoe_double_h,
-                skill_aoe_double_v,
-                skill_aoe_corner,
-                skill_aoe_cross_d,
-                skill_aoe_cross_h]
-
-    for each in aoe_list:
-        print(each)
-        test_aoe(each)
-
-
-
-def test_populate_map(battle_map):
-    battle_map[5][4] = "!"
-    battle_map[3][1] = "!"
-    battle_map[4][2] = "*"
-    battle_map[4][1] = "@"
-    battle_map[3][3] = "*"
-    battle_map[2][2] = "*"
-    battle_map[3][5] = "!"
-    battle_map[7][6] = "!"
-    battle_map[5][3] = "!"
-    battle_map[6][4] = "*"
-    battle_map[6][3] = "@"
-    battle_map[5][5] = "*"
-    battle_map[8][5] = "*"
-    battle_map[6][7] = "!"
 
 
 
