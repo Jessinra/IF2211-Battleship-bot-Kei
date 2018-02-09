@@ -2,7 +2,7 @@ import json
 from pprint import pprint
 
 #  DEBUG & TESTING PURPOSE
-game_round = 74
+game_round = 79
 game_player = 'A'
 
 #  DEBUG & TESTING PURPOSE FILENAME CHECK
@@ -136,13 +136,47 @@ class Game:
             self.dimension = None
 
 
+def last_hit(player_current, player_past):
+    """
+    Get last tile hit
+    :param player_current: player current state
+    :type player_current: object
+    :param player_past: player past state
+    :type player_past: object
+    :return: last hit position (X,Y)
+    :rtype: int, int
+    """
+
+    for i in range(0, len(player_current.ship)):
+
+        for ship_name in player_current.ship[i]:
+
+            for j in range(0, len(player_current.ship[i][ship_name])):
+
+                hit = player_current.ship[i][ship_name][j]['hit']
+                s_hit = player_current.ship[i][ship_name][j]['shieldhit']
+
+                past_hit = player_past.ship[i][ship_name][j]['hit']
+                past_s_hit = player_past.ship[i][ship_name][j]['shieldhit']
+
+                if (hit != past_hit) or (s_hit != past_s_hit):
+
+                    last_hit_x = player_past.ship[i][ship_name][j]['x']
+                    last_hit_y = player_past.ship[i][ship_name][j]['y']
+
+                    return last_hit_x, last_hit_y
+
+
+
 if __name__ == '__main__':
 
     megumi = Player(state_data)
     inspect_object(megumi)
 
     past_megumi = Player(state_data_old)
-    inspect_object(past_megumi)
+
+    last_hit_x, last_hit_y = last_hit(megumi, past_megumi)
+    print("LAST HIT :",last_hit_x, last_hit_y)
 
     reash = Opponent(state_data)
     inspect_object(reash)
