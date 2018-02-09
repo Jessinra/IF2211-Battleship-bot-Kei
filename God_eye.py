@@ -1,56 +1,88 @@
 import json
 from pprint import pprint
 
-#  DEBUG & TESTING PURPOSE
-game_round = 79
-game_player = 'A'
 
 #  DEBUG & TESTING PURPOSE FILENAME CHECK
-filename = "./sample/Phase 2 - Round {1}/{0}/state.json".format(game_player, game_round)
-state_data = json.load(open(filename))
-
-filename_old = "./sample/Phase 2 - Round {1}/{0}/state.json".format(game_player, game_round-4)
-state_data_old = json.load(open(filename_old))
+filename = "./sample/Phase 2 - Round 79/A/state.json"
+filename_old = "./sample/Phase 2 - Round 70/A/state.json"
 
 
-def inspect_object(object):
+def inspect_object(object_instance):
     """
     << DEBUG >> Show object structure
     """
 
-    print("==================== Object:", object.__class__.__name__, "=========================")
-    pprint(vars(object))
+    print("==================== Object:", object_instance.__class__.__name__, "=========================")
+    pprint(vars(object_instance))
     print("======================= end ======================\n\n")
 
 
 class Player:
 
-    def __init__(self, state_data):
+    def __init__(self, filename):
 
-        # Get player points
+        self.__get_state(filename)
+        self.__get_points()
+        self.__get_energy()
+        self.__get_remaining_ship()
+        self.__get_active_ship()
+        self.__get_usable_skill()
+        self.__get_shield_info()
+
+    def __get_state(self, filename):
+        """
+        Get state data
+        """
+
+        retry = 5
+        self.state_data = None
+        while retry > 0:
+            try:
+                self.state_data = json.load(open(filename))
+                retry = 0
+            except:
+                retry -= 1
+
+    def __get_points(self):
+        """
+        Get player points
+        """
+
         try:
-            self.points = state_data["PlayerMap"]["Owner"]["Points"]
+            self.points = self.state_data["PlayerMap"]["Owner"]["Points"]
         except:
             self.points = None
 
-        # Get player energy
+    def __get_energy(self):
+        """
+        Get player energy
+        """
+
         try:
-            self.energy = state_data["PlayerMap"]["Owner"]["Energy"]
+            self.energy = self.state_data["PlayerMap"]["Owner"]["Energy"]
         except:
             self.energy = None
 
-        # Get player remaining_ship
+    def __get_remaining_ship(self):
+        """
+        Get player remaining_ship
+        """
+
         try:
-            self.remaining_ship = state_data["PlayerMap"]["Owner"]["ShipsRemaining"]
+            self.remaining_ship = self.state_data["PlayerMap"]["Owner"]["ShipsRemaining"]
         except:
             self.remaining_ship = None
 
-        # Get player ACTIVE ship
+    def __get_active_ship(self):
+        """
+        Get player ACTIVE ship
+        """
+
         try:
             self.ship = []
 
             # Search for active ship
-            for ship in state_data["PlayerMap"]["Owner"]["Ships"]:
+            for ship in self.state_data["PlayerMap"]["Owner"]["Ships"]:
 
                 if not ship["Destroyed"]:
 
@@ -71,7 +103,11 @@ class Player:
         except:
             self.ship = []
 
-        # Get player usable_skill
+    def __get_usable_skill(self):
+        """
+        Get player usable_skill
+        """
+
         try:
             self.usable_skill = []
 
@@ -96,12 +132,16 @@ class Player:
                     else:
                         continue
 
-        except :
+        except:
             self.usable_skill = []
 
-        # Get player shield
+    def __get_shield_info(self):
+        """
+        Get player shield
+        """
+
         try:
-            self.shield = state_data["PlayerMap"]["Owner"]["Shield"]
+            self.shield = self.state_data["PlayerMap"]["Owner"]["Shield"]
 
         except:
             self.shield = None
@@ -111,24 +151,35 @@ class Opponent:
 
     def __init__(self, state_data):
 
+        self.__get_active_ship(state_data)
+        
+    def __get_active_ship(self, state_data):
+        
         try:
-            self.unsunken_ship = []
+            self.active_ship = []
 
             for ship in state_data["OpponentMap"]["Ships"]:
                 if not ship["Destroyed"]:
-                    self.unsunken_ship.append(ship["ShipType"])
+                    self.active_ship.append(ship["ShipType"])
         except:
-            self.unsunken_ship = []
+            self.active_ship = []
 
 
 class Game:
 
-    def __init__(self):
+    def __init__(self, state_data):
+
+        self.__get_round(state_data)
+        self.__get_dimension(state_data)
+
+    def __get_round(self, state_data):
 
         try:
             self.round = state_data["Round"]
         except:
             self.round = None
+
+    def __get_dimension(self, state_data):
 
         try:
             self.dimension = state_data["MapDimension"]
@@ -136,47 +187,116 @@ class Game:
             self.dimension = None
 
 
-def last_hit(player_current, player_past):
-    """
-    Get last tile hit
-    :param player_current: player current state
-    :type player_current: object
-    :param player_past: player past state
-    :type player_past: object
-    :return: last hit position (X,Y)
-    :rtype: int, int
-    """
+class GodEye:
 
-    for i in range(0, len(player_current.ship)):
+    def __init__(self, filename):
 
-        for ship_name in player_current.ship[i]:
+        filename = GodEye.check_filename(filename)
+        self.__get_state(filename)
+        self.__get_ship(filename)
 
-            for j in range(0, len(player_current.ship[i][ship_name])):
+    def __get_state(self, filename):
+        """
+        Get state data
+        """
 
-                hit = player_current.ship[i][ship_name][j]['hit']
-                s_hit = player_current.ship[i][ship_name][j]['shieldhit']
+        retry = 5
+        self.state_data = None
+        while retry > 0:
+            try:
+                self.state_data = json.load(open(filename))
+                retry = 0
+            except Exception as e:
 
-                past_hit = player_past.ship[i][ship_name][j]['hit']
-                past_s_hit = player_past.ship[i][ship_name][j]['shieldhit']
+                retry -= 1
 
-                if (hit != past_hit) or (s_hit != past_s_hit):
+    def __get_ship(self, filename):
+        """
+        Get ship data
+        """
 
-                    last_hit_x = player_past.ship[i][ship_name][j]['x']
-                    last_hit_y = player_past.ship[i][ship_name][j]['y']
+        player = Player(filename)
+        ship_data = []
 
-                    return last_hit_x, last_hit_y
+        for ship in player.ship:
 
+            for ship_name in ship:
+
+                for tile in ship[ship_name]:
+
+                    if not tile["hit"] and not tile["shield"]:
+                        x = tile['x']
+                        y = tile['y']
+                        ship_data.append((x, y))
+
+        self.__ships = ship_data
+
+    def ship(self):
+        return self.__ships
+
+    @staticmethod
+    def check_filename(filename):
+
+        index_start = filename.find("Round") + 6
+        index_stop = filename.rfind("/state.json")
+
+        game_data = filename[index_start:index_stop].split('/')
+        game_round = int(game_data[0])
+        game_player = game_data[1]
+
+        if game_player == "A":
+            return filename[:index_start] + str(game_round - 1) + "/B/state.json"
+
+        if game_player == "B":
+            return filename[:index_start] + str(game_round) + "/A/state.json"
+
+    @staticmethod
+    def last_hit(player_current, player_past):
+        """
+        Get last tile hit
+        :param player_current: player current state
+        :type player_current: player
+        :param player_past: player past state
+        :type player_past: player
+        :return: last hit position x and y
+        :rtype: int, int
+        """
+
+        for i in range(0, len(player_current.ship)):
+
+            for ship_name in player_current.ship[i]:
+
+                for j in range(0, len(player_current.ship[i][ship_name])):
+
+                    hit = player_current.ship[i][ship_name][j]['hit']
+                    s_hit = player_current.ship[i][ship_name][j]['shieldhit']
+
+                    past_hit = player_past.ship[i][ship_name][j]['hit']
+                    past_s_hit = player_past.ship[i][ship_name][j]['shieldhit']
+
+                    if (hit != past_hit) or (s_hit != past_s_hit):
+                        last_hit_x = player_past.ship[i][ship_name][j]['x']
+                        last_hit_y = player_past.ship[i][ship_name][j]['y']
+
+                        return last_hit_x, last_hit_y
+
+        return None, None
 
 
 if __name__ == '__main__':
 
-    megumi = Player(state_data)
-    inspect_object(megumi)
+    megumi = Player(filename)
+    # inspect_object(megumi)
 
-    past_megumi = Player(state_data_old)
+    past_megumi = Player(filename_old)
 
-    last_hit_x, last_hit_y = last_hit(megumi, past_megumi)
-    print("LAST HIT :",last_hit_x, last_hit_y)
+    god_eye = GodEye(filename)
 
-    reash = Opponent(state_data)
-    inspect_object(reash)
+    last_hit_x, last_hit_y = GodEye.last_hit(megumi, past_megumi)
+    print("LAST HIT :", last_hit_x, last_hit_y)
+
+    locations = god_eye.ship()
+    print("Op ship:",locations)
+
+    eriri = Opponent(filename)
+    # inspect_object(eriri)
