@@ -70,6 +70,7 @@ tile_mode_neutral = "_"
 tile_mode_shield = "@"
 tile_mode_hit = "*"
 tile_mode_potential = "?"
+tile_mode_ship_active = "A"
 
 """
     DO_NOTHING(0),

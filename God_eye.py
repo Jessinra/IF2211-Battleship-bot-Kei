@@ -4,7 +4,7 @@ from pprint import pprint
 
 
 #  DEBUG & TESTING PURPOSE FILENAME CHECK
-filename = "./sample/Phase 2 - Round 19/A/state.json"
+filename = "./sample/Phase 2 - Round 89/A/state.json"
 filename_old = "./sample/Phase 2 - Round 70/A/state.json"
 
 
@@ -115,25 +115,25 @@ class Player:
             self.usable_skill = []
 
             for ship in self.ship:
-                for ship_name in ship:
-                    if "Submarine" in ship_name:
-                        self.usable_skill.append("seeker")
+                ship_name = ship.key()
+                if "Submarine" in ship_name:
+                    self.usable_skill.append("seeker")
 
-                    elif "Destroyer" in ship_name:
-                        self.usable_skill.append("double_h")
-                        self.usable_skill.append("double_v")
+                elif "Destroyer" in ship_name:
+                    self.usable_skill.append("double_h")
+                    self.usable_skill.append("double_v")
 
-                    elif "Battleship" in ship_name:
-                        self.usable_skill.append("cross_d")
+                elif "Battleship" in ship_name:
+                    self.usable_skill.append("cross_d")
 
-                    elif "Cruiser" in ship_name:
-                        self.usable_skill.append("cross_h")
+                elif "Cruiser" in ship_name:
+                    self.usable_skill.append("cross_h")
 
-                    elif "Carrier" in ship_name:
-                        self.usable_skill.append("corner")
+                elif "Carrier" in ship_name:
+                    self.usable_skill.append("corner")
 
-                    else:
-                        continue
+                else:
+                    continue
 
         except:
             self.usable_skill = []

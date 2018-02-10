@@ -352,16 +352,18 @@ def write_command(decision):
     # CHANGE IT TO TXT LATER
     print(output)
 
+
 if __name__ == '__main__':
 
     # TESTING PURPOSE
     battle_map = create_battle_map(10, 10)
     test_populate_map(battle_map)
-    battle_map[4][7] = "X"
+    battle_map[4][9] = "X"
     print_battle_map(battle_map)
 
     # BOT SECTION
     megumi = Player(filename)
+    # inspect_object(megumi)
     last_hit = (4, 7)
 
     # Check and determine which skill to use
