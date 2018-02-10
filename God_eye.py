@@ -1,9 +1,10 @@
 import json
+from Database import *
 from pprint import pprint
 
 
 #  DEBUG & TESTING PURPOSE FILENAME CHECK
-filename = "./sample/Phase 2 - Round 79/A/state.json"
+filename = "./sample/Phase 2 - Round 19/A/state.json"
 filename_old = "./sample/Phase 2 - Round 70/A/state.json"
 
 
@@ -28,6 +29,8 @@ class Player:
         self.__get_active_ship()
         self.__get_usable_skill()
         self.__get_shield_info()
+        self.__get_skill_cost()
+        self.__evaluate_usable_skill()
 
     def __get_state(self, filename):
         """
@@ -145,6 +148,22 @@ class Player:
 
         except:
             self.shield = None
+
+    def __get_skill_cost(self):
+
+        self.cost = {"normal": 1}
+        for skill in self.usable_skill:
+            self.cost[skill] = skill_cost[self.state_data["MapDimension"]][skill]
+
+    def __evaluate_usable_skill(self):
+
+        filtered_skill = ["normal"]
+        for skill in self.usable_skill:
+
+            if self.energy >= self.cost[skill]:
+                filtered_skill.append(skill)
+
+        self.usable_skill = filtered_skill
 
 
 class Opponent:
@@ -283,20 +302,20 @@ class GodEye:
         return None, None
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
-    megumi = Player(filename)
-    # inspect_object(megumi)
-
-    past_megumi = Player(filename_old)
-
-    god_eye = GodEye(filename)
-
-    last_hit_x, last_hit_y = GodEye.last_hit(megumi, past_megumi)
-    print("LAST HIT :", last_hit_x, last_hit_y)
-
-    locations = god_eye.ship()
-    print("Op ship:",locations)
-
-    eriri = Opponent(filename)
-    # inspect_object(eriri)
+    # megumi = Player(filename)
+    # # inspect_object(megumi)
+    # print(megumi.cost)
+    # past_megumi = Player(filename_old)
+    #
+    # god_eye = GodEye(filename)
+    #
+    # last_hit_x, last_hit_y = GodEye.last_hit(megumi, past_megumi)
+    # print("LAST HIT :", last_hit_x, last_hit_y)
+    #
+    # locations = god_eye.ship()
+    # print("Op ship:",locations)
+    #
+    # eriri = Opponent(filename)
+    # # inspect_object(eriri)

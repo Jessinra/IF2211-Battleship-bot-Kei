@@ -70,7 +70,7 @@ def test_populate_map(battle_map):
     battle_map[3][2] = "!"
     battle_map[5][1] = "!"
     battle_map[8][3] = "*"
-    battle_map[4][7] = "@"
+    battle_map[4][6] = "?"
     battle_map[3][8] = "*"
     battle_map[3][3] = "*"
     battle_map[6][6] = "!"
@@ -81,6 +81,29 @@ def test_populate_map(battle_map):
     battle_map[7][4] = "*"
     battle_map[4][2] = "*"
     battle_map[6][7] = "!"
+
+    battle_map[2][2] = "!"
+    battle_map[2][3] = "!"
+    battle_map[2][4] = "*"
+    battle_map[2][5] = "@"
+    battle_map[2][6] = "*"
+    battle_map[6][2] = "*"
+    battle_map[6][3] = "!"
+    battle_map[6][4] = "!"
+    battle_map[6][5] = "!"
+    battle_map[6][6] = "*"
+    battle_map[3][6] = "@"
+    battle_map[4][8] = "?"
+    battle_map[5][6] = "*"
+    battle_map[3][2] = "@"
+    battle_map[4][2] = "*"
+    battle_map[5][2] = "*"
+
+    battle_map[3][4] = "*"
+    battle_map[5][4] = "@"
+    battle_map[3][3] = "*"
+    battle_map[4][3] = "*"
+    battle_map[5][3] = "!"
 
 
 """ *************************************************
@@ -198,7 +221,7 @@ def examine_skill_effect(battle_map, pivot, skill_type):
         # elif skill_type == "seeker":
         #     search_list = skill_aoe_seeker
         else:
-            search_list = []
+            search_list = [(0, 0)]
 
         return search_list
 
@@ -217,7 +240,7 @@ def examine_skill_effect(battle_map, pivot, skill_type):
             return "missed"
         elif tile == tile_mode_hit:
             return "hit"
-        elif tile == tile_mode_hit:
+        elif tile == tile_mode_potential:
             return "potential"
         else:
             return "neutral"
@@ -260,7 +283,7 @@ def greedy_pick(player, examine_report):
 
     best_record = examine_report[0]
     skill_cost = player.cost
-    max_value = 0
+    max_value = -888
 
     # Coefficient to adjust
     p_coef = 125
@@ -274,8 +297,8 @@ def greedy_pick(player, examine_report):
     for examine_result in examine_report:
 
         value = 0
-        value += examine_result["potential"] * p_coef
-        value += examine_result["neutral"] * n_coef
+        value += examine_result["potential"] * p_coef   # adjacent tile (has best potential) - diurus regi
+        value += examine_result["neutral"] * n_coef     # not hit
 
         value += examine_result["missed"] * m_coef
         value += examine_result["hit"] * h_coef
@@ -284,12 +307,15 @@ def greedy_pick(player, examine_report):
         not_hit = examine_result["potential"] + examine_result["neutral"]
         already_hit = examine_result["missed"] + examine_result["hit"] + examine_result["shield"] + 1
 
-        t_coef = not_hit / (already_hit + not_hit)
+        t_coef = not_hit * not_hit / (already_hit + not_hit)
         value *= t_coef
 
         c_coef = (already_hit + not_hit) / skill_cost[examine_result["skill"]]
         value *= c_coef
 
+        # print(value, examine_result)
+
+        # Find best one
         if value > max_value:
             max_value = value
             best_record = examine_result
@@ -297,18 +323,50 @@ def greedy_pick(player, examine_report):
     return best_record
 
 
+def write_command(decision):
+
+    code = 0
+    pos_x = decision["x"]
+    pos_y = decision["y"]
+
+    skill = decision["skill"]
+    if skill == "normal":
+        code = 1
+    elif skill == "double_v":
+        code = 2
+    elif skill == "double_h":
+        code = 3
+    elif skill == "corner":
+        code = 4
+    elif skill == "cross_d":
+        code = 5
+    elif skill == "cross_h":
+        code = 6
+    elif skill == "seeker":
+        code = 7
+    elif skill == "shield":
+        code = 8
+
+    output = "{},{},{}".format(code, pos_x, pos_y)
+
+    # CHANGE IT TO TXT LATER
+    print(output)
+
 if __name__ == '__main__':
 
     # TESTING PURPOSE
     battle_map = create_battle_map(10, 10)
-    battle_map[4][4] = "X"
     test_populate_map(battle_map)
+    battle_map[4][7] = "X"
     print_battle_map(battle_map)
 
     # BOT SECTION
     megumi = Player(filename)
-    last_hit = (4,4)
-    examine_report = attack_mode_examine_map(battle_map, pivot=last_hit, usable_skill=megumi.usable_skill)
+    last_hit = (4, 7)
 
+    # Check and determine which skill to use
+    examine_report = attack_mode_examine_map(battle_map, pivot=last_hit, usable_skill=megumi.usable_skill)
     best_result = greedy_pick(megumi, examine_report)
+
     print(best_result)
+    write_command(best_result)
