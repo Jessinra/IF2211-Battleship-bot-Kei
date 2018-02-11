@@ -270,7 +270,7 @@ def examine_skill_effect(battle_map, pivot, skill_type):
     return examine_result
 
 
-def greedy_pick(player, examine_report):
+def greedy_pick(player, examine_report, show=False):
     """
     Find best record
     :param player:
@@ -313,7 +313,8 @@ def greedy_pick(player, examine_report):
         c_coef = (already_hit + not_hit) / skill_cost[examine_result["skill"]]
         value *= c_coef
 
-        # print(value, examine_result)
+        if show:
+            print(value, examine_result)
 
         # Find best one
         if value > max_value:
