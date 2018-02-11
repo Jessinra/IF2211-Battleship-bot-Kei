@@ -5,6 +5,29 @@ from God_eye import *
 ************************************************* """
 
 
+def create_battle_map(row, col):
+    """
+    Create matrix rox x col, initialize with neutral tile
+    :param row: battle map row
+    :type row: int
+    :param col: battle map col
+    :type col: int
+    :return: battle map
+    :rtype: list of list
+    """
+
+    battle_map = []
+    for x in range(0, row):
+
+        new_row = []
+        for y in range(0, col):
+            new_row.append(tile_mode_neutral)
+
+        battle_map.append(new_row)
+
+    return battle_map
+
+
 def print_battle_map(battle_map):
     """
     Print battle map to console
@@ -111,27 +134,160 @@ def test_populate_map(battle_map):
 ************************************************* """
 
 
-def create_battle_map(row, col):
+def player_map(state):
     """
-    Create matrix rox x col, initialize with neutral tile
-    :param row: battle map row
-    :type row: int
-    :param col: battle map col
-    :type col: int
-    :return: battle map
-    :rtype: list of list
+    return player map (parsed) in matrix
+    :param state:
+    :type state:
+    :return:
+    :rtype:
     """
 
-    battle_map = []
-    for x in range(0, row):
+    def idx(size, i, j):
+        return i * size + j
 
-        new_row = []
-        for y in range(0, col):
-            new_row.append(tile_mode_neutral)
+    size = state['MapDimension']
+    mat = [[tile_mode_neutral for i in range(size)] for j in range(size)]
+    for i in range(size):
+        for j in range(size):
+            if state['OpponentMap']['Cells'][idx(size, i, j)]['Damaged']:
+                mat[i][j] = tile_mode_hit
+            elif state['OpponentMap']['Cells'][idx(size, i, j)]['Missed']:
+                mat[i][j] = tile_mode_missed
 
-        battle_map.append(new_row)
+            elif state['PlayerMap']['Cells'][idx(size, i, j)]['ShieldHit']:
+                mat[i][j] = tile_mode_shield
+            else:
+                mat[i][j] = tile_mode_neutral
+    return mat
 
-    return battle_map
+
+def determine_potential(battle_map, pivot):
+    """
+    Return potential tile, given pivot (x,y)
+    :param battle_map:
+    :type battle_map:
+    :param pivot:
+    :type pivot:
+    :return:
+    :rtype:
+    """
+
+    point = []
+    right = False
+    left = False
+    up = False
+    down = False
+    x, y = pivot
+    abscissa = x
+
+    def determine_direction(battle_map, x, y):
+        """
+        return pair of boolean, determine checking direction
+        :param battle_map:
+        :type battle_map:
+        :param x:
+        :type x:
+        :param y:
+        :type y:
+        :return:
+        :rtype:
+        """
+
+        horizontal = True
+        vertical = True
+
+        if battle_map[x+1][y] == tile_mode_hit or battle_map[x-1][y] == tile_mode_hit:
+            horizontal = False
+
+        if battle_map[x][y+1] == tile_mode_hit or battle_map[x][y-1] == tile_mode_hit:
+            vertical = False
+
+        return horizontal, vertical
+
+    search_horizontal, search_vertical = determine_direction(battle_map, x, y)
+
+    if search_horizontal:
+
+        it = 1
+        while not right or not left:
+            if not right:
+                ordinate = y
+                if y + it > len(battle_map) - 1:
+                    right = True
+
+                elif battle_map[x][y + it] == tile_mode_hit:
+                    pass
+
+                elif battle_map[x][y + it] == tile_mode_neutral:
+                    right = True
+                    ordinate = ordinate + it
+                    point.append((abscissa, ordinate))
+
+                else:
+                    break
+
+            if not left:
+                ordinate = y
+                if y - it <= 0:
+                    left = True
+
+                elif battle_map[x][y - it] == tile_mode_hit:
+                    pass
+
+                elif battle_map[x][y - it] == tile_mode_neutral:
+                    left = True
+                    ordinate = ordinate - it
+                    point.append((abscissa, ordinate))
+                else:
+                    break
+
+            it = it + 1
+
+    if search_vertical:
+
+        it = 1
+        ordinate = y
+        while (not up) or (not down):
+            if not up:
+                abscissa = x
+                if x - it <= 0:
+                    up = True
+
+                elif battle_map[x - it][y] == tile_mode_hit:
+                    pass
+
+                elif battle_map[x - it][y] == tile_mode_neutral:
+                    up = True
+                    abscissa = abscissa - it
+                    point.append((abscissa, ordinate))
+                else:
+                    break
+
+            if not down:
+                abscissa = x
+                if x + it > len(battle_map) - 1:
+                    down = True
+
+                elif battle_map[x + it][y] == tile_mode_hit:
+                    pass
+
+                elif battle_map[x + it][y] == tile_mode_neutral:
+                    down = True
+                    abscissa = abscissa + it
+                    point.append((abscissa, ordinate))
+                else:
+                    break
+
+            it = it + 1
+
+    return point
+
+
+def mark_potential(battle_map, point):
+
+    for x, y in point:
+        battle_map[x][y] = tile_mode_potential
 
 
 def attack_mode_examine_map(battle_map, pivot, usable_skill):
@@ -245,8 +401,6 @@ def examine_skill_effect(battle_map, pivot, skill_type):
         else:
             return "neutral"
 
-    # def mark_potential(tile):
-
     # Separate x and y
     pivot_x, pivot_y = pivot
 
@@ -287,7 +441,7 @@ def greedy_pick(player, examine_report, show=False):
 
     # Coefficient to adjust
     p_coef = 125
-    n_coef = 20
+    n_coef = 30
 
     m_coef = -20
     h_coef = -20
@@ -307,14 +461,14 @@ def greedy_pick(player, examine_report, show=False):
         not_hit = examine_result["potential"] + examine_result["neutral"]
         already_hit = examine_result["missed"] + examine_result["hit"] + examine_result["shield"] + 1
 
-        t_coef = not_hit * not_hit / (already_hit + not_hit)
+        t_coef = not_hit * not_hit * not_hit/ (already_hit + not_hit)
         value *= t_coef
 
         c_coef = (already_hit + not_hit) / skill_cost[examine_result["skill"]]
         value *= c_coef
 
         if show:
-            print(value, examine_result)
+            print(round(value, 3), examine_result)
 
         # Find best one
         if value > max_value:
@@ -354,22 +508,40 @@ def write_command(decision):
     print(output)
 
 
-if __name__ == '__main__':
+# # FOR MAIN PROGRAM
+# def state_attack_or_search(battle_map):
+#
+#     def use_skill(battle_map):
+#         count = 0
+#         for row in battle_map:
+#             for col in row:
+#                 if battle_map[row][col] == tile_mode_potential:
+#                     count += 1
+#
+#         return count != 0
+#
+#     # Don't use skill if no potential tile
+#     if not use_skill(battle_map):
+#         pass
+#        # don't attack, go search !!
 
-    # TESTING PURPOSE
-    battle_map = create_battle_map(10, 10)
-    test_populate_map(battle_map)
-    battle_map[4][9] = "X"
-    print_battle_map(battle_map)
+if __name__ == '__main__':
 
     # BOT SECTION
     megumi = Player(filename)
+    battle_map = player_map(megumi.state_data)
+
+    last_hit = (1, 3)
+    last_x, last_y = last_hit
+
+    battle_map[last_x][last_y] = "X"
+    potential_tile = determine_potential(battle_map, last_hit)
+    mark_potential(battle_map, potential_tile)
+    print_battle_map(battle_map)
     # inspect_object(megumi)
-    last_hit = (4, 7)
 
     # Check and determine which skill to use
     examine_report = attack_mode_examine_map(battle_map, pivot=last_hit, usable_skill=megumi.usable_skill)
-    best_result = greedy_pick(megumi, examine_report, show=True)
-
-    print(best_result)
+    best_result = greedy_pick(megumi, examine_report, True)
+    # print(best_result)
     write_command(best_result)

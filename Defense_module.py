@@ -60,6 +60,32 @@ def test_populate_map(battle_map):
 ************************************************* """
 
 
+def player_map(state):
+    """
+    return player map (parsed) in matrix
+    :param state:
+    :type state:
+    :return:
+    :rtype:
+    """
+
+    def idx(size, i, j):
+        return i * size + j
+
+    size = state['MapDimension']
+    mat = [[tile_mode_neutral for i in range(size)] for j in range(size)]
+    for i in range(size):
+        for j in range(size):
+            if state['PlayerMap']['Cells'][idx(size, i, j)]['Occupied']:
+                if state['PlayerMap']['Cells'][idx(size, i, j)]['Hit']:
+                    mat[i][j] = tile_mode_hit
+                else:
+                    mat[i][j] = tile_mode_ship_active
+            elif state['PlayerMap']['Cells'][idx(size, i, j)]['Hit']:
+                mat[i][j] = tile_mode_hit
+    return mat
+
+
 def examine_best_shield_position(player, battle_map, pivot):
     """
     Whole process of determining where to put shield
@@ -196,7 +222,7 @@ def examine_shield_effect(battle_map, pivot, radius):
     return examine_result
 
 
-def greedy_pick(examine_report):
+def greedy_pick(examine_report, show=False):
 
     best = examine_report[0]
     value_max = -888
@@ -218,7 +244,8 @@ def greedy_pick(examine_report):
         t_coef = protected / (protected + examine_result["hit"])
         value *= t_coef
 
-        # print(value, examine_result)
+        if show:
+            print(value, examine_result)
 
         if value > value_max:
             best = examine_result
@@ -235,15 +262,13 @@ def write_command(decision):
 
 if __name__ == '__main__':
 
-    # TESTING PURPOSE
-    battle_map = create_battle_map(10, 10)
-    test_populate_map(battle_map)
-    battle_map[2][3] = "X"
-    print_battle_map(battle_map)
-
     megumi = Player(filename)
-    last_hit = (2, 2)
-    examine_report = examine_best_shield_position(megumi, battle_map, last_hit)
+    player_map = player_map(megumi.state_data)
+    player_map[3][2] = "X"
+    print_battle_map(player_map)
+
+    last_hit = (3, 2)
+    examine_report = examine_best_shield_position(megumi, player_map, last_hit)
     if examine_report != "no need to shield":
         best = greedy_pick(examine_report)
         write_command(best)

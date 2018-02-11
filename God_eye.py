@@ -4,8 +4,9 @@ from pprint import pprint
 
 
 #  DEBUG & TESTING PURPOSE FILENAME CHECK
-filename = "./sample/Phase 2 - Round 89/A/state.json"
-filename_old = "./sample/Phase 2 - Round 70/A/state.json"
+filename = "./sample/Phase 2 - Round 42/A/state.json"
+filename_old = "./sample/Phase 2 - Round 42/A/state.json"
+filename_hit_log = "./sample/storage.txt"
 
 
 def inspect_object(object_instance):
@@ -113,29 +114,31 @@ class Player:
 
         try:
             self.usable_skill = []
-
             for ship in self.ship:
-                ship_name = ship.key()
-                if "Submarine" in ship_name:
-                    self.usable_skill.append("seeker")
 
-                elif "Destroyer" in ship_name:
-                    self.usable_skill.append("double_h")
-                    self.usable_skill.append("double_v")
+                for ship_name in ship:
 
-                elif "Battleship" in ship_name:
-                    self.usable_skill.append("cross_d")
+                    if "Submarine" in ship_name:
+                        self.usable_skill.append("seeker")
 
-                elif "Cruiser" in ship_name:
-                    self.usable_skill.append("cross_h")
+                    elif "Destroyer" in ship_name:
+                        self.usable_skill.append("double_h")
+                        self.usable_skill.append("double_v")
 
-                elif "Carrier" in ship_name:
-                    self.usable_skill.append("corner")
+                    elif "Battleship" in ship_name:
+                        self.usable_skill.append("cross_d")
 
-                else:
-                    continue
+                    elif "Cruiser" in ship_name:
+                        self.usable_skill.append("cross_h")
 
-        except:
+                    elif "Carrier" in ship_name:
+                        self.usable_skill.append("corner")
+
+                    else:
+                        continue
+
+        except Exception as e:
+            print(e)
             self.usable_skill = []
 
     def __get_shield_info(self):
@@ -280,6 +283,7 @@ class GodEye:
         :return: last hit position x and y
         :rtype: int, int
         """
+        storage = open(filename_hit_log, 'a')
 
         for i in range(0, len(player_current.ship)):
 
@@ -296,26 +300,14 @@ class GodEye:
                     if (hit != past_hit) or (s_hit != past_s_hit):
                         last_hit_x = player_past.ship[i][ship_name][j]['x']
                         last_hit_y = player_past.ship[i][ship_name][j]['y']
+                        storage.write(str(last_hit_x) + "," + str(last_hit_y)+"\n")
 
-                        return last_hit_x, last_hit_y
-
-        return None, None
-
-
-# if __name__ == '__main__':
-
-    # megumi = Player(filename)
-    # # inspect_object(megumi)
-    # print(megumi.cost)
-    # past_megumi = Player(filename_old)
-    #
-    # god_eye = GodEye(filename)
-    #
-    # last_hit_x, last_hit_y = GodEye.last_hit(megumi, past_megumi)
-    # print("LAST HIT :", last_hit_x, last_hit_y)
-    #
-    # locations = god_eye.ship()
-    # print("Op ship:",locations)
-    #
-    # eriri = Opponent(filename)
-    # # inspect_object(eriri)
+        try:
+            storage = open(filename_hit_log, 'r')
+            last_hit = None
+            for line in storage:
+                last_hit = line.strip()
+            split_last_hit = last_hit.split(',')
+            return int(split_last_hit[0]), int(split_last_hit[1])
+        except:
+            return None, None
