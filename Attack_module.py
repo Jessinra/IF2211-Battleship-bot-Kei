@@ -53,8 +53,8 @@ def test_populate_map(battle_map):
     """
 
     battle_map[5][4] = "!"
-    battle_map[3][1] = "!"
-    battle_map[4][2] = "*"
+    battle_map[3][8] = "@"
+    battle_map[3][9] = "@"
     battle_map[4][1] = "@"
     battle_map[3][4] = "*"
     battle_map[2][2] = "*"
@@ -71,7 +71,7 @@ def test_populate_map(battle_map):
     battle_map[5][1] = "!"
     battle_map[8][3] = "*"
     battle_map[4][6] = "?"
-    battle_map[3][8] = "*"
+    battle_map[3][7] = "*"
     battle_map[3][3] = "*"
     battle_map[6][6] = "!"
     battle_map[3][6] = "!"
@@ -369,7 +369,7 @@ if __name__ == '__main__':
 
     # Check and determine which skill to use
     examine_report = attack_mode_examine_map(battle_map, pivot=last_hit, usable_skill=megumi.usable_skill)
-    best_result = greedy_pick(megumi, examine_report)
+    best_result = greedy_pick(megumi, examine_report, show=True)
 
     print(best_result)
     write_command(best_result)
